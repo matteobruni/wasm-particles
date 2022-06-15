@@ -17,9 +17,7 @@ console_error_panic_hook = { version = "0.1.6", optional = true }
 wee_alloc = { version = "0.4.5", optional = true }
 web-sys = { version = "0.3", features = ["CanvasRenderingContext2d", "Document", "Element", "HtmlCanvasElement", "Window"] }
 
-
-getrandom = { version = "*", features = ["js"] }
-rand = "0.8"
+nanorand = { version = "0.7", default-features = false, features = ["alloc", "std", "tls", "wyrand", "getrandom"] }
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.13"

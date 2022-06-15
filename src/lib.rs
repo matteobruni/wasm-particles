@@ -1,7 +1,7 @@
 mod utils;
-extern crate rand;
+extern crate nanorand;
 
-use rand::{thread_rng, Rng};
+use nanorand::{WyRand, Rng};
 use std::cell::RefCell;
 use std::rc::Rc;
 use wasm_bindgen::prelude::*;
@@ -15,15 +15,15 @@ static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
 #[derive(Debug, Copy, Clone)]
 struct Velocity {
-	x: f32,
-	y: f32,
-	x_delta: f32,
-	y_delta: f32,
+	x: f64,
+	y: f64,
+	x_delta: f64,
+	y_delta: f64,
 }
 
 #[derive(Debug, Copy, Clone)]
 struct Particle {
-		loc: (f32, f32),
+		loc: (f64, f64),
 		vel: Velocity,
 		size: i16,
 		color: (u8, u8, u8, u8),
@@ -40,22 +40,22 @@ impl World {
 	fn new(width: u32, height: u32, max_particles: usize) -> World {
 		let width = width;
 		let height = height;
-		let mut rng = thread_rng();
+		let mut rng = WyRand::new();
 
 		let mut particles = Vec::new();
 		while particles.len() < max_particles {
 			particles.push(Particle {
 				loc: (
-					rng.gen_range(0.0..width as f32),
-					rng.gen_range(0.0..height as f32)
+					rng.generate_range(0..width) as f64,
+					rng.generate_range(0..height) as f64
 				),
 				vel: Velocity {
-					x: rng.gen_range(0.0..0.5),
-					y: rng.gen_range(-0.5..0.0),
-					x_delta: rng.gen_range(-0.05..0.05),
-					y_delta: rng.gen_range(-0.05..0.05),
+					x: rng.generate_range(0i16..25000) as f64 / 500_000.,
+					y: rng.generate_range(-25000i16..0) as f64 / 500_000.,
+					x_delta: rng.generate_range(-25000i16..=25000) as f64 / 500_000.,
+					y_delta: rng.generate_range(-25000i16..=25000) as f64 / 500_000.,
 				},
-				size: rng.gen_range(2..7),
+				size: rng.generate_range(2..7),
 				color: (255, 255, 255, 128),
 				color_target: (255, 255, 255, 128),
 			})
@@ -89,26 +89,26 @@ impl World {
 
 impl Particle {
 	fn update(&mut self, width: u32, height: u32) {
-		let mut rng = thread_rng();
+		let mut rng = WyRand::new();
 		// Color stuff
 		if self.color.3 < self.color_target.3 {
 			self.color.3 += 1;
 		} else if self.color.3 > self.color_target.3 {
 			self.color.3 -= 1;
 		} else if self.color.3 == self.color_target.3 {
-			self.color_target.3 = rng.gen();
+			self.color_target.3 = rng.generate();
 		}
 
 		// Location wrap-around
-		if self.loc.0 > width as f32 + 15.0 {
+		if self.loc.0 > width as f64 + 15.0 {
 			self.loc.0 = -15.0;
 		} else if self.loc.0 < -15.0 {
-			self.loc.0 = width as f32 + 15.0;
+			self.loc.0 = width as f64 + 15.0;
 		}
-		if self.loc.1 > height as f32 + 15.0 {
+		if self.loc.1 > height as f64 + 15.0 {
 			self.loc.1 = -15.0;
 		} else if self.loc.1 < -15.0 {
-			self.loc.1 = height as f32 + 15.0;
+			self.loc.1 = height as f64 + 15.0;
 		}
 		self.vel.update(&mut rng);
 		self.loc.0 += self.vel.x;
@@ -122,11 +122,11 @@ impl Particle {
 }
 
 impl Velocity {
-	fn update<R: Rng>(&mut self, rng: &mut R){
+	fn update(&mut self, rng: &mut WyRand){
 		self.x += self.x_delta;
-		self.x_delta = rng.gen_range(-0.05..=0.05);
+		self.x_delta = rng.generate_range(-25000i16..=25000) as f64 / 500_000.;
 		self.y += self.y_delta;
-		self.y_delta = rng.gen_range(-0.05..=0.05);
+		self.y_delta = rng.generate_range(-25000i16..=25000) as f64 / 500_000.;
 		// Clamping, sorta.
 		// The particles get too fast without the following.
 		// Still allows for particles to go fast though...
