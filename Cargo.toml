@@ -1,6 +1,6 @@
 [package]
 name = "wasm-particles"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Mike <michaelpulliam1@gmail.com>"]
 edition = "2018"
 
@@ -17,7 +17,7 @@ console_error_panic_hook = { version = "0.1.6", optional = true }
 wee_alloc = { version = "0.4.5", optional = true }
 web-sys = { version = "0.3", features = ["CanvasRenderingContext2d", "Document", "Element", "HtmlCanvasElement", "Window"] }
 
-nanorand = { version = "0.7", default-features = false, features = ["alloc", "std", "tls", "wyrand", "getrandom"] }
+nanorand = { version = "0.7", default-features = false, features = ["alloc", "std", "wyrand", "getrandom"] }
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.13"
