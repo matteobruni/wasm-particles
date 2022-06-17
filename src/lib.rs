@@ -25,7 +25,7 @@ struct Velocity {
 struct Particle {
 		loc: (f64, f64),
 		vel: Velocity,
-		size: i16,
+		size: f64,
 		color: (u8, u8, u8, u8),
 		color_target: (u8, u8, u8, u8),
 }
@@ -55,7 +55,7 @@ impl World {
 					x_delta: rng.generate_range(-25000i16..=25000) as f64 / 500_000.,
 					y_delta: rng.generate_range(-25000i16..=25000) as f64 / 500_000.,
 				},
-				size: rng.generate_range(2..7),
+				size: rng.generate_range(2..7) as f64,
 				color: (255, 255, 255, 128),
 				color_target: (255, 255, 255, 128),
 			})
@@ -79,8 +79,8 @@ impl World {
 		for p in &self.particles {
 			tgt.begin_path();
 			tgt.set_fill_style(&wasm_bindgen::JsValue::from_str(&p.color_hex()));
-			tgt.move_to(p.loc.0 as f64, p.loc.1 as f64);
-			tgt.arc(p.loc.0 as f64, p.loc.1 as f64, p.size as f64, 0.0, std::f64::consts::PI * 2.0).unwrap();
+			tgt.move_to(p.loc.0.floor(), p.loc.1.floor());
+			tgt.arc(p.loc.0.floor(), p.loc.1.floor(), p.size, 0.0, std::f64::consts::PI * 2.0).unwrap();
 			tgt.fill();
 			tgt.close_path();
 		}
@@ -179,11 +179,17 @@ pub fn start() {
 	world.update();
 	world.render(&context);
 	*g.borrow_mut() = Some(Closure::wrap(Box::new(move || {
+		let window_height = window.inner_height().unwrap().as_f64().unwrap() as u32;
+		let window_width = window.inner_width().unwrap().as_f64().unwrap() as u32;
 		if frame % 60 == 0 {
-			canvas.set_height(window.inner_height().unwrap().as_f64().unwrap() as u32);
-			canvas.set_width(window.inner_width().unwrap().as_f64().unwrap() as u32);
-			world.width = canvas.width();
-			world.height = canvas.height();
+			if canvas.height() != window_height {
+				canvas.set_height(window_height);
+				world.height = window_height;
+			}
+			if canvas.width() != window_width {
+				canvas.set_width(window_width);
+				world.width = window_width;
+			}
 		}
 		frame += 1;
 		world.update();
